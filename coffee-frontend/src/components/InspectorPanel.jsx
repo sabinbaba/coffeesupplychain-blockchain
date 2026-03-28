@@ -1,85 +1,134 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BATCH_STATUS } from "../utils/contract";
 import { ethers } from "ethers";
 
-export default function InspectorPanel({ contract }) {
-  const [batchId, setBatchId] = useState("");
-  const [batch, setBatch]     = useState(null);
-  const [status, setStatus]   = useState("");
-  const [loading, setLoading] = useState(false);
+export default function InspectorPanel({ contract, account }) {
+  const [batches, setBatches]   = useState([]);
+  const [loading, setLoading]   = useState(false);
+  const [txStatus, setTxStatus] = useState({});
 
-  const lookupBatch = async () => {
-    if (!batchId) return setStatus("❌ Enter a batch ID.");
-    try {
-      const b = await contract.getBatch(parseInt(batchId));
-      setBatch(b);
-      setStatus("");
-    } catch (err) {
-      setStatus("❌ Batch not found.");
-      setBatch(null);
-    }
-  };
-
-  const inspectBatch = async () => {
+  // ─── Load all batches in "Processing" status ──
+  const loadBatches = async () => {
     setLoading(true);
-    setStatus("⏳ Submitting inspection...");
     try {
-      const tx = await contract.inspectBatch(parseInt(batchId));
-      setStatus("⏳ Waiting for confirmation...");
-      await tx.wait();
-      setStatus("✅ Batch approved successfully!");
-      await lookupBatch();
+      const count = await contract.batchCount();
+      const total = Number(count);
+      const all   = [];
+
+      for (let i = 1; i <= total; i++) {
+        const b      = await contract.getBatch(i);
+        const status = Number(b.status);
+        // Show: Processing (needs inspection) OR
+        //       already inspected by this inspector
+        if (
+          status === 1 ||
+          (status >= 2 && b.inspector.toLowerCase() === account.toLowerCase())
+        ) {
+          all.push(b);
+        }
+      }
+      setBatches(all);
     } catch (err) {
-      setStatus(`❌ Error: ${err.reason || err.message}`);
+      console.error("Error loading batches:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => { loadBatches(); }, [contract, account]);
+
+  // ─── Inspect a batch ──────────────────────────
+  const inspectBatch = async (id) => {
+    setTxStatus((prev) => ({ ...prev, [id]: "⏳ Submitting inspection..." }));
+    try {
+      const tx = await contract.inspectBatch(id);
+      setTxStatus((prev) => ({ ...prev, [id]: "⏳ Confirming..." }));
+      await tx.wait();
+      setTxStatus((prev) => ({ ...prev, [id]: "✅ Batch approved!" }));
+      await loadBatches();
+    } catch (err) {
+      setTxStatus((prev) => ({
+        ...prev,
+        [id]: `❌ ${err.reason || err.message}`,
+      }));
+    }
+  };
+
+  // ─── Action button per batch status ───────────
+  const renderAction = (b) => {
+    const id      = Number(b.id);
+    const status  = Number(b.status);
+    const isMyInspection =
+      b.inspector.toLowerCase() === account.toLowerCase();
+
+    if (status === 1) {
+      return (
+        <button
+          className="btn-primary"
+          onClick={() => inspectBatch(id)}
+        >
+          Approve Batch
+        </button>
+      );
+    }
+
+    if (status >= 2 && isMyInspection) {
+      return (
+        <span className="badge-approved">
+          Approved by you
+        </span>
+      );
+    }
+
+    return null;
   };
 
   return (
     <div className="panel">
       <h3>🔍 Inspector Dashboard</h3>
       <p className="panel-desc">
-        Look up a batch in "Processing" status and approve it after quality check.
+        Batches waiting for your quality approval, and your previously inspected batches.
       </p>
-      <div className="form-row">
-        <input
-          type="number"
-          placeholder="Batch ID"
-          value={batchId}
-          onChange={(e) => setBatchId(e.target.value)}
-        />
-        <button className="btn-secondary" onClick={lookupBatch}>
-          Look Up
-        </button>
-      </div>
 
-      {batch && (
-        <div className="batch-detail">
-          <p><strong>Origin:</strong> {batch.origin}</p>
-          <p><strong>Weight:</strong> {batch.weightKg.toString()} kg</p>
-          <p><strong>Price:</strong> {ethers.formatEther(batch.price)} ETH</p>
-          <p><strong>Farmer:</strong> <code>{batch.farmer}</code></p>
-          <p><strong>Status:</strong>{" "}
-            <span className="batch-status">{BATCH_STATUS[Number(batch.status)]}</span>
-          </p>
+      <button className="btn-secondary" onClick={loadBatches} disabled={loading}>
+        {loading ? "Loading..." : "Refresh Batches"}
+      </button>
 
-          {Number(batch.status) === 1 ? (
-            <button
-              className="btn-primary"
-              onClick={inspectBatch}
-              disabled={loading}
-            >
-              {loading ? "Approving..." : "✅ Approve Batch"}
-            </button>
-          ) : (
-            <p className="muted">
-              This batch is not in "Processing" status — nothing to inspect.
-            </p>
-          )}
-        </div>
+      {batches.length === 0 && !loading && (
+        <p className="muted" style={{ marginTop: "1rem" }}>
+          No batches waiting for inspection right now.
+        </p>
       )}
-      {status && <p className="status-msg">{status}</p>}
+
+      <div className="batch-list">
+        {batches.map((b) => {
+          const id     = Number(b.id);
+          const status = Number(b.status);
+          return (
+            <div className="batch-card-full" key={id}>
+              <div className="batch-card-top">
+                <span className="batch-id">Batch #{id}</span>
+                <span className={`status-pill status-${status}`}>
+                  {BATCH_STATUS[status]}
+                </span>
+              </div>
+              <div className="batch-card-body">
+                <p><strong>Origin:</strong> {b.origin}</p>
+                <p><strong>Weight:</strong> {b.weightKg.toString()} kg</p>
+                <p><strong>Price:</strong> {ethers.formatEther(b.price)} ETH</p>
+                <p><strong>Farmer:</strong> <code>{b.farmer.slice(0,8)}...{b.farmer.slice(-6)}</code></p>
+                <p><strong>Processor:</strong> <code>{b.processor.slice(0,8)}...{b.processor.slice(-6)}</code></p>
+              </div>
+              <div className="batch-card-action">
+                {renderAction(b)}
+                {txStatus[id] && (
+                  <p className="status-msg">{txStatus[id]}</p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

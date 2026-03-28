@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useContract } from "./utils/useContract";
 import FarmerPanel    from "./components/FarmerPanel";
 import ProcessorPanel from "./components/ProcessorPanel";
@@ -18,7 +18,22 @@ function App() {
     refreshRole,
   } = useContract();
 
-  const [showAdmin, setShowAdmin] = useState(false);
+  const [showAdmin, setShowAdmin]   = useState(false);
+  const [isAdmin, setIsAdmin]       = useState(false);
+
+  // ─── Check if connected wallet is the admin ───
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!contract || !account) return;
+      try {
+        const adminAddress = await contract.admin();
+        setIsAdmin(adminAddress.toLowerCase() === account.toLowerCase());
+      } catch (err) {
+        console.error("Error checking admin:", err);
+      }
+    };
+    checkAdmin();
+  }, [contract, account]);
 
   const shortAddress = (addr) =>
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
@@ -26,7 +41,7 @@ function App() {
   const renderPanel = () => {
     if (!contract || !account) return null;
 
-    if (showAdmin) {
+    if (showAdmin && isAdmin) {
       return (
         <AdminPanel
           contract={contract}
@@ -44,9 +59,42 @@ function App() {
       case 0:
       default:
         return (
-          <div className="no-role-box">
-            <p>⚠️ Your wallet has no role assigned.</p>
-            <p>Ask the admin to assign you a role using the Admin panel.</p>
+          <div className="onboarding">
+            <div className="onboarding-icon">⚠️</div>
+            <h3>No Role Assigned Yet</h3>
+            <p>Your wallet is connected but you don't have a role in this system.</p>
+            <div className="onboarding-steps">
+              <div className="onboarding-step">
+                <span className="step-num">1</span>
+                <div>
+                  <strong>Copy your wallet address</strong>
+                  <p>Your address: <code>{account}</code></p>
+                </div>
+              </div>
+              <div className="onboarding-step">
+                <span className="step-num">2</span>
+                <div>
+                  <strong>Send it to the admin</strong>
+                  <p>The admin will assign you a role — Farmer, Processor, Inspector, or Consumer.</p>
+                </div>
+              </div>
+              <div className="onboarding-step">
+                <span className="step-num">3</span>
+                <div>
+                  <strong>Refresh this page</strong>
+                  <p>Once assigned, refresh and your dashboard will appear automatically.</p>
+                </div>
+              </div>
+            </div>
+            <button
+              className="btn-copy"
+              onClick={() => {
+                navigator.clipboard.writeText(account);
+                alert("Address copied to clipboard!");
+              }}
+            >
+              Copy My Wallet Address
+            </button>
           </div>
         );
     }
@@ -106,20 +154,29 @@ function App() {
                 className={`tab-btn ${!showAdmin ? "active" : ""}`}
                 onClick={() => setShowAdmin(false)}
               >
-                {roleName === "None" ? "My Dashboard" : `${roleName} Dashboard`}
+                {roleName === "None"
+                  ? "My Dashboard"
+                  : `${roleName} Dashboard`}
               </button>
-              <button
-                className={`tab-btn ${showAdmin ? "active" : ""}`}
-                onClick={() => setShowAdmin(true)}
-              >
-                🔑 Admin Panel
-              </button>
+
+              {/* Only show Admin tab to the contract deployer */}
+              {isAdmin && (
+                <button
+                  className={`tab-btn ${showAdmin ? "active" : ""}`}
+                  onClick={() => setShowAdmin(true)}
+                >
+                  🔑 Admin Panel
+                </button>
+              )}
             </div>
 
-            {/* ── Panel content ── */}
+            {/* ── Panel address ── */}
             <div className="panel-header">
               <p className="panel-address">
                 Connected as: <code>{account}</code>
+                {isAdmin && (
+                  <span className="admin-tag"> — contract admin</span>
+                )}
               </p>
             </div>
 

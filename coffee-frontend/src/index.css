@@ -425,10 +425,10 @@ code {
   font-weight: 600;
 }
 
-.role-1 { background: #dcfce7; color: #166534; } /* Farmer    */
-.role-2 { background: #ede9fe; color: #5b21b6; } /* Processor */
-.role-3 { background: #dbeafe; color: #1e40af; } /* Inspector */
-.role-4 { background: #fef9c3; color: #854d0e; } /* Consumer  */
+.role-1 { background: #dcfce7; color: #166534; }
+.role-2 { background: #ede9fe; color: #5b21b6; }
+.role-3 { background: #dbeafe; color: #1e40af; }
+.role-4 { background: #fef9c3; color: #854d0e; }
 
 /* ── Remove button ── */
 .btn-remove {
@@ -445,4 +445,166 @@ code {
 .btn-remove:hover {
   background: #fee2e2;
   color: #dc2626;
+}
+
+/* ── Onboarding (no role) ── */
+.onboarding {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.onboarding-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.onboarding h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.5rem;
+}
+
+.onboarding > p {
+  color: #666;
+  font-size: 0.92rem;
+  margin-bottom: 1.5rem;
+}
+
+.onboarding-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.onboarding-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.step-num {
+  background: #4f46e5;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.onboarding-step strong {
+  font-size: 0.92rem;
+  color: #1a1a2e;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.onboarding-step p {
+  font-size: 0.84rem;
+  color: #666;
+}
+
+.btn-copy {
+  background: #f0f0ff;
+  color: #4f46e5;
+  border: 2px solid #4f46e5;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-copy:hover {
+  background: #4f46e5;
+  color: white;
+}
+
+/* ── Admin tag ── */
+.admin-tag {
+  color: #4f46e5;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* ── Full batch cards (processor + inspector) ── */
+.batch-card-full {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.batch-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.batch-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.88rem;
+  color: #333;
+  margin-bottom: 0.75rem;
+}
+
+.batch-card-action {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Status pills ── */
+.status-pill {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.status-0 { background: #dcfce7; color: #166534; }
+.status-1 { background: #ede9fe; color: #5b21b6; }
+.status-2 { background: #dbeafe; color: #1e40af; }
+.status-3 { background: #fef9c3; color: #854d0e; }
+.status-4 { background: #fee2e2; color: #991b1b; }
+
+/* ── Badge labels ── */
+.badge-listed {
+  background: #fef9c3;
+  color: #854d0e;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-approved {
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-block;
 }
