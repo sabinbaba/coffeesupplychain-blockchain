@@ -1,0 +1,18 @@
+(base) ┌──(baba㉿Baba)-[~/Desktop/blockchain-study/coffee-chain]
+└─$ npx hardhat run scripts/deploy.cjs --network sepolia
+[dotenv@17.3.1] injecting env (2) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+🚀 Deploying CoffeeSupplyChain to Sepolia...
+
+Deploying with account: 0x2D3C3085a3Bbd6Ca0fBf88668B188e60c2624142
+Account balance: 1.405179347624581284 ETH
+
+✅ Contract deployed successfully!
+📌 Contract address: 0x1Ae735947965964f858906A2991Da1F396dFbF0a
+
+🔍 View on Etherscan:
+   https://sepolia.etherscan.io/address/0x1Ae735947965964f858906A2991Da1F396dFbF0a
+                                                                                                                                            
+(base) ┌──(baba㉿Baba)-[~/Desktop/blockchain-study/coffee-chain]
+└─$ 
+
