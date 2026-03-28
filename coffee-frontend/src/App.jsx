@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useContract } from "./utils/useContract";
-import FarmerPanel    from "./components/FarmerPanel";
-import ProcessorPanel from "./components/ProcessorPanel";
-import InspectorPanel from "./components/InspectorPanel";
-import ConsumerPanel  from "./components/ConsumerPanel";
-import AdminPanel     from "./components/AdminPanel";
+import FarmerPanel     from "./components/FarmerPanel";
+import ProcessorPanel  from "./components/ProcessorPanel";
+import InspectorPanel  from "./components/InspectorPanel";
+import ConsumerPanel   from "./components/ConsumerPanel";
+import AdminPanel      from "./components/AdminPanel";
+import TraceabilityPage from "./components/TraceabilityPage";
+import Layout          from "./components/Layout";
 
 function App() {
   const {
@@ -20,6 +22,7 @@ function App() {
 
   const [showAdmin, setShowAdmin]   = useState(false);
   const [isAdmin, setIsAdmin]       = useState(false);
+  const [activePage, setActivePage] = useState("dashboard");
 
   // ─── Check if connected wallet is the admin ───
   useEffect(() => {
@@ -38,9 +41,7 @@ function App() {
   const shortAddress = (addr) =>
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
-  const renderPanel = () => {
-    if (!contract || !account) return null;
-
+  const renderDashboard = () => {
     if (showAdmin && isAdmin) {
       return (
         <AdminPanel
@@ -130,9 +131,7 @@ function App() {
       {/* ── Error message ── */}
       {error && <div className="error-banner">❌ {error}</div>}
 
-      {/* ── Main content ── */}
-      <main className="main">
-        {!account ? (
+      {!account ? (
           <div className="welcome">
             <h1>Welcome to CoffeeChain ☕</h1>
             <p>Connect your MetaMask wallet to get started.</p>
@@ -146,44 +145,20 @@ function App() {
             </button>
           </div>
         ) : (
-          <div className="panel-wrapper">
-
-            {/* ── Tab navigation ── */}
-            <div className="tab-nav">
-              <button
-                className={`tab-btn ${!showAdmin ? "active" : ""}`}
-                onClick={() => setShowAdmin(false)}
-              >
-                {roleName === "None"
-                  ? "My Dashboard"
-                  : `${roleName} Dashboard`}
-              </button>
-
-              {/* Only show Admin tab to the contract deployer */}
-              {isAdmin && (
-                <button
-                  className={`tab-btn ${showAdmin ? "active" : ""}`}
-                  onClick={() => setShowAdmin(true)}
-                >
-                  🔑 Admin Panel
-                </button>
-              )}
-            </div>
-
-            {/* ── Panel address ── */}
-            <div className="panel-header">
-              <p className="panel-address">
-                Connected as: <code>{account}</code>
-                {isAdmin && (
-                  <span className="admin-tag"> — contract admin</span>
-                )}
-              </p>
-            </div>
-
-            {renderPanel()}
-          </div>
+          <Layout
+            account={account}
+            roleName={roleName}
+            isAdmin={isAdmin}
+            activePage={activePage}
+            setActivePage={setActivePage}
+          >
+            {activePage === "dashboard" && renderDashboard()}
+            {activePage === "trace" && <TraceabilityPage contract={contract} />}
+            {activePage === "admin" && showAdmin && isAdmin && (
+              <AdminPanel contract={contract} account={account} onRoleAssigned={refreshRole} />
+            )}
+          </Layout>
         )}
-      </main>
 
     </div>
   );
