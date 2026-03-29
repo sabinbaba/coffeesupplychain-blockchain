@@ -7,10 +7,17 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard",      icon: "⊞" },
-    { id: "trace",     label: "Traceability",   icon: "🔗" },
-    ...(isAdmin ? [{ id: "admin", label: "Admin Panel", icon: "🔑" }] : []),
+    { id: "dashboard", label: "Operations",   icon: "◈" },
+    { id: "trace",     label: "Traceability", icon: "⛓" },
+    ...(isAdmin ? [{ id: "admin", label: "Admin Console", icon: "⌘" }] : []),
   ];
+
+  const handleNavigate = (page) => {
+    setActivePage(page);
+    if (window.innerWidth <= 920) {
+      setSidebarOpen(false);
+    }
+  };
 
   return (
     <div className={`layout ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
@@ -31,7 +38,7 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
             <button
               key={item.id}
               className={`nav-item ${activePage === item.id ? "nav-active" : ""}`}
-              onClick={() => setActivePage(item.id)}
+              onClick={() => handleNavigate(item.id)}
             >
               <span className="nav-icon">{item.icon}</span>
               {sidebarOpen && <span className="nav-label">{item.label}</span>}
@@ -49,6 +56,8 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
         )}
       </aside>
 
+      {sidebarOpen && <button className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" />}
+
       {/* ── Main area ── */}
       <div className="layout-main">
 
@@ -57,8 +66,8 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
           <div className="topbar-left">
             <h2 className="topbar-title">
               {activePage === "dashboard"  && `${roleName} Dashboard`}
-              {activePage === "trace"      && "Batch Traceability"}
-              {activePage === "admin"      && "Admin Panel"}
+              {activePage === "trace"      && "Batch Journey"}
+              {activePage === "admin"      && "Admin Console"}
             </h2>
           </div>
           <div className="topbar-right">

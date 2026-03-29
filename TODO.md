@@ -1,13 +1,34 @@
-# Task: Merge new improved CSS into index.css
+# On-Chain Participant Names
 
-## Plan Steps:
+**Approved: Move from localStorage to on-chain mapping(address => string name)**
 
-- [x] Step 1: Read current index.css
-- [ ] Step 2: Merge new CSS (layout/sidebar/topbar, traceability polish) into existing
-- [ ] Step 3: Resolve conflicts/duplicates (e.g., .btn-connect, .panel, status-pills)
-- [ ] Step 4: Test dev server styling
-- [ ] Step 5: Complete
+**Current:** AdminPanel saves to localStorage, Traceability reads (multi-wallet works but not persistent)
 
-Complete! CSS merged: new layout/sidebar/topbar + polished traceability (hero gradient, timeline, participant cards, table). Layout responsive, dark sidebar, hover effects.
+**Plan:**
+**Backend (coffee-chain/contracts/CoffeeSupplyChain.sol):**
 
-Dev server reloads automatically - check styling in browser.
+- Add `mapping(address => string) public names;`
+- `function setName(address user, string memory _name) external onlyAdmin`
+- Update `assignRole` emit name too
+
+**Frontend:**
+
+1. `coffee-frontend/src/utils/contract.js`: Add name ABI, update ROLES
+2. AdminPanel.jsx: Call setName + assignRole
+3. Create `useNames` hook: cache names from contract.names(addr)
+4. Update all panels + Traceability: useNames(addr) everywhere
+
+**Dependent Files:**
+
+- CoffeeSupplyChain.sol
+- contract.js (ABI)
+- AdminPanel.jsx
+- New useNames.js hook
+- Update all 4 role panels + Traceability
+
+**Followup:**
+
+1. Redeploy contract (update CONTRACT_ADDRESS)
+2. `npm run dev` test
+
+Confirm before editing contract?
