@@ -1,11 +1,13 @@
-# Task: Show role names instead of just addresses in TraceabilityPage
+# Task: Merge new improved CSS into index.css
 
 ## Plan Steps:
 
-- [ ] Step 1: Create TODO.md
-- [ ] Step 2: Edit TraceabilityPage.jsx to import ROLES, fetch roles for participants/table
-- [ ] Step 3: Add state/loading for participant roles
-- [ ] Step 4: Update rendering to 'Role: shortAddr'
-- [ ] Step 5: Test & complete
+- [x] Step 1: Read current index.css
+- [ ] Step 2: Merge new CSS (layout/sidebar/topbar, traceability polish) into existing
+- [ ] Step 3: Resolve conflicts/duplicates (e.g., .btn-connect, .panel, status-pills)
+- [ ] Step 4: Test dev server styling
+- [ ] Step 5: Complete
 
-Progress: Complete! Now shows "Role (shortAddr)" in participant cards (fetches contract.roles), table shows "Farmer (shortAddr)". Test with real batch.
+Complete! CSS merged: new layout/sidebar/topbar + polished traceability (hero gradient, timeline, participant cards, table). Layout responsive, dark sidebar, hover effects.
+
+Dev server reloads automatically - check styling in browser.

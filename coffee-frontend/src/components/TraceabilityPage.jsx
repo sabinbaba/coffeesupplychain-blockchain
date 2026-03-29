@@ -1,16 +1,30 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { BATCH_STATUS, CONTRACT_ADDRESS, ROLES } from "../utils/contract";
+import { BATCH_STATUS, CONTRACT_ADDRESS } from "../utils/contract";
+
+// ─── Helper: get name from localStorage ───────
+const getName = (address) => {
+  if (!address || address === ethers.ZeroAddress) return null;
+  try {
+    const users = JSON.parse(localStorage.getItem("coffeechain_users") || "[]");
+    const found = users.find(
+      (u) => u.address.toLowerCase() === address.toLowerCase()
+    );
+    return found ? found.name : null;
+  } catch {
+    return null;
+  }
+};
 
 export default function TraceabilityPage({ contract }) {
-  const [batchId, setBatchId]   = useState("");
-  const [batch, setBatch]       = useState(null);
-  const [participantRoles, setParticipantRoles] = useState({});
+  const [batchId,    setBatchId]    = useState("");
+  const [batch,      setBatch]      = useState(null);
   const [allBatches, setAllBatches] = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [error, setError]       = useState("");
+  const [loading,    setLoading]    = useState(false);
+  const [searching,  setSearching]  = useState(false);
+  const [error,      setError]      = useState("");
 
+  // ─── Load all batches ─────────────────────────
   const loadAllBatches = async () => {
     if (!contract) return;
     setLoading(true);
@@ -30,37 +44,17 @@ export default function TraceabilityPage({ contract }) {
     }
   };
 
-  const getRoleDisplay = (addr, roleNum) => {
-    if (!addr || addr === ethers.ZeroAddress || !roleNum) return "—";
-    return `${ROLES[roleNum] || "Unknown"} (${shortAddr(addr)})`;
-  };
-
   useEffect(() => { loadAllBatches(); }, [contract]);
 
+  // ─── Search single batch ──────────────────────
   const searchBatch = async () => {
     if (!batchId) return;
     setSearching(true);
     setError("");
     setBatch(null);
-    setParticipantRoles({});
     try {
       const b = await contract.getBatch(parseInt(batchId));
       setBatch(b);
-      // Fetch roles for batch participants
-      const roles = {};
-      if (b.farmer !== ethers.ZeroAddress) {
-        roles.farmer = Number(await contract.roles(b.farmer));
-      }
-      if (b.processor !== ethers.ZeroAddress) {
-        roles.processor = Number(await contract.roles(b.processor));
-      }
-      if (b.inspector !== ethers.ZeroAddress) {
-        roles.inspector = Number(await contract.roles(b.inspector));
-      }
-      if (b.currentOwner !== ethers.ZeroAddress) {
-        roles.currentOwner = Number(await contract.roles(b.currentOwner));
-      }
-      setParticipantRoles(roles);
     } catch {
       setError("Batch not found. Please check the ID.");
     } finally {
@@ -68,13 +62,22 @@ export default function TraceabilityPage({ contract }) {
     }
   };
 
-  const statusSteps = [
-    { label: "Harvested",  icon: "🌱", desc: "Recorded by farmer"     },
-    { label: "Processing", icon: "⚙️", desc: "Taken by processor"     },
-    { label: "Inspected",  icon: "🔍", desc: "Approved by inspector"  },
-    { label: "For Sale",   icon: "🏷️", desc: "Listed on market"       },
-    { label: "Sold",       icon: "✅", desc: "Purchased by consumer"  },
-  ];
+  // ─── Display: name + short address ────────────
+  const displayParticipant = (address) => {
+    if (!address || address === ethers.ZeroAddress ||
+        address === "0x0000000000000000000000000000000000000000") {
+      return <span className="not-assigned">Not assigned yet</span>;
+    }
+    const name = getName(address);
+    return (
+      <div className="participant-identity">
+        {name && <strong className="participant-name">{name}</strong>}
+        <code className="participant-addr">
+          {address.slice(0, 10)}...{address.slice(-8)}
+        </code>
+      </div>
+    );
+  };
 
   const formatDate = (ts) => {
     if (!ts || ts.toString() === "0") return "—";
@@ -83,18 +86,69 @@ export default function TraceabilityPage({ contract }) {
 
   const shortAddr = (addr) => {
     if (!addr || addr === "0x0000000000000000000000000000000000000000") return "—";
-    return `${addr.slice(0, 10)}...${addr.slice(-8)}`;
+    const name = getName(addr);
+    return name || `${addr.slice(0, 8)}...${addr.slice(-6)}`;
+  };
+
+  // ─── Timeline steps with timestamps ───────────
+  const getTimelineSteps = (b) => {
+    const status = Number(b.status);
+    return [
+      {
+        label:     "Harvested",
+        icon:      "🌱",
+        desc:      "Recorded by farmer",
+        done:      status >= 0,
+        active:    status === 0,
+        who:       b.farmer,
+        timestamp: b.createdAt,
+      },
+      {
+        label:     "Processing",
+        icon:      "⚙️",
+        desc:      "Taken by processor",
+        done:      status >= 1,
+        active:    status === 1,
+        who:       b.processor,
+        timestamp: status >= 1 ? b.updatedAt : null,
+      },
+      {
+        label:     "Inspected",
+        icon:      "🔍",
+        desc:      "Approved by inspector",
+        done:      status >= 2,
+        active:    status === 2,
+        who:       b.inspector,
+        timestamp: status >= 2 ? b.updatedAt : null,
+      },
+      {
+        label:     "For Sale",
+        icon:      "🏷️",
+        desc:      "Listed on market",
+        done:      status >= 3,
+        active:    status === 3,
+        who:       b.processor,
+        timestamp: status >= 3 ? b.updatedAt : null,
+      },
+      {
+        label:     "Sold",
+        icon:      "✅",
+        desc:      "Purchased by consumer",
+        done:      status >= 4,
+        active:    status === 4,
+        who:       status >= 4 ? b.currentOwner : null,
+        timestamp: status >= 4 ? b.updatedAt : null,
+      },
+    ];
   };
 
   return (
     <div className="trace-page">
 
-      {/* ── Page header ── */}
+      {/* ── Hero search ── */}
       <div className="trace-hero">
         <h1>Batch Traceability</h1>
         <p>Track any coffee batch from farm to consumer — fully on-chain and transparent.</p>
-
-        {/* Search bar */}
         <div className="trace-search">
           <input
             type="number"
@@ -114,7 +168,7 @@ export default function TraceabilityPage({ contract }) {
       {batch && (
         <div className="trace-result">
 
-          {/* Batch info header */}
+          {/* Header */}
           <div className="trace-result-header">
             <div>
               <span className="trace-batch-id">Batch #{Number(batch.id)}</span>
@@ -126,63 +180,79 @@ export default function TraceabilityPage({ contract }) {
               <span>📍 {batch.origin}</span>
               <span>⚖️ {batch.weightKg.toString()} kg</span>
               <span>💰 {ethers.formatEther(batch.price)} ETH</span>
+              <span>🕐 Created: {formatDate(batch.createdAt)}</span>
+              <span>🔄 Updated: {formatDate(batch.updatedAt)}</span>
             </div>
           </div>
 
-          {/* Journey timeline */}
+          {/* Timeline with names + timestamps */}
           <div className="trace-timeline">
             <h3>Supply Chain Journey</h3>
             <div className="timeline">
-              {statusSteps.map((step, i) => {
-                const currentStatus = Number(batch.status);
-                const done    = i <= currentStatus;
-                const active  = i === currentStatus;
-                return (
-                  <div key={i} className={`timeline-step ${done ? "done" : ""} ${active ? "active" : ""}`}>
-                    <div className="timeline-icon">{step.icon}</div>
-                    <div className="timeline-content">
-                      <strong>{step.label}</strong>
-                      <span>{step.desc}</span>
-                    </div>
-                    {i < statusSteps.length - 1 && (
-                      <div className={`timeline-connector ${done && i < currentStatus ? "done" : ""}`} />
+              {getTimelineSteps(batch).map((step, i, arr) => (
+                <div
+                  key={i}
+                  className={`timeline-step ${step.done ? "done" : ""} ${step.active ? "active" : ""}`}
+                >
+                  <div className="timeline-icon">{step.icon}</div>
+                  <div className="timeline-content">
+                    <strong>{step.label}</strong>
+                    <span>{step.desc}</span>
+                    {step.done && step.who &&
+                      step.who !== "0x0000000000000000000000000000000000000000" && (
+                      <span className="timeline-who">
+                        {getName(step.who) || `${step.who.slice(0,6)}...`}
+                      </span>
+                    )}
+                    {step.done && step.timestamp &&
+                      step.timestamp.toString() !== "0" && (
+                      <span className="timeline-time">
+                        {formatDate(step.timestamp)}
+                      </span>
                     )}
                   </div>
-                );
-              })}
+                  {i < arr.length - 1 && (
+                    <div className={`timeline-connector ${step.done && !step.active ? "done" : ""}`} />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Participants */}
+          {/* Participants with names */}
           <div className="trace-participants">
             <h3>Participants</h3>
             <div className="participant-grid">
               <div className="participant-card">
                 <span className="participant-role teal">🌱 Farmer</span>
-                <code>{getRoleDisplay(batch.farmer, participantRoles.farmer)}</code>
-                <span className="participant-date">{formatDate(batch.createdAt)}</span>
+                {displayParticipant(batch.farmer)}
+                <span className="participant-date">
+                  Recorded: {formatDate(batch.createdAt)}
+                </span>
               </div>
               <div className="participant-card">
                 <span className="participant-role purple">⚙️ Processor</span>
-                <code>{getRoleDisplay(batch.processor, participantRoles.processor)}</code>
+                {displayParticipant(batch.processor)}
               </div>
               <div className="participant-card">
                 <span className="participant-role blue">🔍 Inspector</span>
-                <code>{getRoleDisplay(batch.inspector, participantRoles.inspector)}</code>
+                {displayParticipant(batch.inspector)}
               </div>
               <div className="participant-card">
                 <span className="participant-role coral">👤 Current Owner</span>
-                <code>{getRoleDisplay(batch.currentOwner, participantRoles.currentOwner)}</code>
-                <span className="participant-date">{formatDate(batch.updatedAt)}</span>
+                {displayParticipant(batch.currentOwner)}
+                <span className="participant-date">
+                  Last updated: {formatDate(batch.updatedAt)}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Verification */}
+          {/* Etherscan link */}
           <div className="trace-verify">
-            <span>🔗 Verify on Etherscan: </span>
-            <a
-              href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`}
+            <span>🔗 Verify on Etherscan</span>
+            
+             <a href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`}
               target="_blank"
               rel="noreferrer"
             >
@@ -217,6 +287,7 @@ export default function TraceabilityPage({ contract }) {
                   <th>Status</th>
                   <th>Farmer</th>
                   <th>Created</th>
+                  <th>Last Updated</th>
                   <th></th>
                 </tr>
               </thead>
@@ -232,8 +303,16 @@ export default function TraceabilityPage({ contract }) {
                         {BATCH_STATUS[Number(b.status)]}
                       </span>
                     </td>
-<td><code>{getRoleDisplay(b.farmer, 1)}</code></td>
+                    <td>
+                      <div className="table-participant">
+                        {getName(b.farmer)
+                          ? <strong>{getName(b.farmer)}</strong>
+                          : <code>{b.farmer.slice(0,8)}...</code>
+                        }
+                      </div>
+                    </td>
                     <td className="date-cell">{formatDate(b.createdAt)}</td>
+                    <td className="date-cell">{formatDate(b.updatedAt)}</td>
                     <td>
                       <button
                         className="btn-track"
