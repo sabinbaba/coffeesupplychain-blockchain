@@ -20,7 +20,6 @@ function App() {
     refreshRole,
   } = useContract();
 
-  const [showAdmin, setShowAdmin]   = useState(false);
   const [isAdmin, setIsAdmin]       = useState(false);
   const [activePage, setActivePage] = useState("dashboard");
 
@@ -42,7 +41,7 @@ function App() {
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
   const renderDashboard = () => {
-    if (showAdmin && isAdmin) {
+    if (isAdmin) {
       return (
         <AdminPanel
           contract={contract}
@@ -132,7 +131,8 @@ function App() {
       {error && <div className="error-banner">❌ {error}</div>}
 
       {!account ? (
-          <div className="welcome">
+        <div className="welcome-screen">
+          <div className="welcome-card">
             <h1>Welcome to CoffeeChain ☕</h1>
             <p>Connect your MetaMask wallet to get started.</p>
             <p>Make sure you are on the <strong>Sepolia</strong> testnet.</p>
@@ -144,21 +144,20 @@ function App() {
               {loading ? "Connecting..." : "Connect Wallet"}
             </button>
           </div>
-        ) : (
-          <Layout
-            account={account}
-            roleName={roleName}
-            isAdmin={isAdmin}
-            activePage={activePage}
-            setActivePage={setActivePage}
-          >
-            {activePage === "dashboard" && renderDashboard()}
-            {activePage === "trace" && <TraceabilityPage contract={contract} />}
-            {activePage === "admin" && showAdmin && isAdmin && (
-              <AdminPanel contract={contract} account={account} onRoleAssigned={refreshRole} />
-            )}
-          </Layout>
-        )}
+        </div>
+      ) : (
+        <Layout
+          account={account}
+          roleName={roleName}
+          isAdmin={isAdmin}
+          activePage={activePage}
+          setActivePage={setActivePage}
+        >
+          {activePage === "dashboard" && renderDashboard()}
+          {activePage === "trace" && <TraceabilityPage contract={contract} />}
+          {activePage === "admin" && <AdminPanel contract={contract} account={account} onRoleAssigned={refreshRole} />}
+        </Layout>
+      )}
 
     </div>
   );

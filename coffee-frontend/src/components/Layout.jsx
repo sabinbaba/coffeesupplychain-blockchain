@@ -6,10 +6,10 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
   const shortAddress = (addr) =>
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
-  const navItems = [
+    const navItems = [
     { id: "dashboard", label: "Dashboard",      icon: "⊞" },
     { id: "trace",     label: "Traceability",   icon: "🔗" },
-    ...(isAdmin ? [{ id: "admin", label: "Admin Panel", icon: "🔑" }] : []),
+    { id: "admin", label: "Admin Panel", icon: "🔑" },
   ];
 
   return (
