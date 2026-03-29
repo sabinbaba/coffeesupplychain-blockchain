@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Layout({ account, roleName, isAdmin, activePage, setActivePage, children }) {
+export default function Layout({ account, roleName, isAdmin, activePage, setActivePage, onLogout, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const shortAddress = (addr) =>
@@ -72,11 +72,14 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
           </div>
           <div className="topbar-right">
             {account && (
-              <div className="topbar-wallet">
-                <div className="wallet-dot" />
-                <span className="topbar-address">{shortAddress(account)}</span>
-                <span className="topbar-network">Sepolia</span>
-              </div>
+              <>
+                <div className="topbar-wallet">
+                  <div className="wallet-dot" />
+                  <span className="topbar-address">{shortAddress(account)}</span>
+                  <span className="topbar-network">Sepolia</span>
+                </div>
+                <button className="btn-logout" onClick={onLogout}>Logout</button>
+              </>
             )}
           </div>
         </header>
