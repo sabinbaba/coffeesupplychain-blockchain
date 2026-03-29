@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { ABI, CONTRACT_ADDRESS, ROLES } from "./contract";
 
+const LOGOUT_FLAG_KEY = "coffeechain_wallet_logged_out";
+
 export function useContract() {
   const [provider, setProvider]   = useState(null);
   const [signer, setSigner]       = useState(null);
@@ -11,6 +13,17 @@ export function useContract() {
   const [roleName, setRoleName]   = useState("None");
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState(null);
+
+  const clearSessionState = useCallback(() => {
+    setProvider(null);
+    setSigner(null);
+    setContract(null);
+    setAccount(null);
+    setRole(null);
+    setRoleName("None");
+    setLoading(false);
+    setError(null);
+  }, []);
 
   // ─── Fetch role from blockchain ───────────────
   const fetchRole = useCallback(async (contractInstance, address) => {
@@ -56,6 +69,7 @@ export function useContract() {
       setSigner(web3Signer);
       setContract(contractInstance);
       setAccount(accounts[0]);
+      sessionStorage.removeItem(LOGOUT_FLAG_KEY);
 
       // Fetch this wallet's role from blockchain
       await fetchRole(contractInstance, accounts[0]);
@@ -67,10 +81,18 @@ export function useContract() {
     }
   }, [fetchRole]);
 
+  const logout = useCallback(() => {
+    // Note: dApps cannot disconnect MetaMask programmatically.
+    // We clear local app session and skip auto-connect until user reconnects.
+    sessionStorage.setItem(LOGOUT_FLAG_KEY, "1");
+    clearSessionState();
+  }, [clearSessionState]);
+
   // ─── Auto-reconnect if already connected ──────
   useEffect(() => {
     const autoConnect = async () => {
       if (!window.ethereum) return;
+      if (sessionStorage.getItem(LOGOUT_FLAG_KEY) === "1") return;
 
       const web3Provider = new ethers.BrowserProvider(window.ethereum);
       const accounts = await web3Provider.listAccounts();
@@ -86,7 +108,13 @@ export function useContract() {
   useEffect(() => {
     if (!window.ethereum) return;
 
-    const handleAccountChange = () => connectWallet();
+    const handleAccountChange = async (accounts) => {
+      if (!accounts || accounts.length === 0) {
+        clearSessionState();
+        return;
+      }
+      await connectWallet();
+    };
     const handleChainChange   = () => window.location.reload();
 
     window.ethereum.on("accountsChanged", handleAccountChange);
@@ -96,7 +124,7 @@ export function useContract() {
       window.ethereum.removeListener("accountsChanged", handleAccountChange);
       window.ethereum.removeListener("chainChanged",    handleChainChange);
     };
-  }, [connectWallet]);
+  }, [clearSessionState, connectWallet]);
 
   // ─── Refresh role (called after transactions) ─
   const refreshRole = useCallback(async () => {
@@ -115,6 +143,7 @@ export function useContract() {
     loading,
     error,
     connectWallet,
+    logout,
     refreshRole,
   };
 }

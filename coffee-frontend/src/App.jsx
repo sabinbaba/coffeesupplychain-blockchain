@@ -17,6 +17,7 @@ function App() {
     loading,
     error,
     connectWallet,
+    logout,
     refreshRole,
   } = useContract();
 
@@ -131,8 +132,8 @@ function App() {
       {error && <div className="error-banner">❌ {error}</div>}
 
       {!account ? (
-        <div className="welcome-screen">
-          <div className="welcome-card">
+        <div className="welcome">
+          <div>
             <h1>Welcome to CoffeeChain ☕</h1>
             <p>Connect your MetaMask wallet to get started.</p>
             <p>Make sure you are on the <strong>Sepolia</strong> testnet.</p>
@@ -152,10 +153,11 @@ function App() {
           isAdmin={isAdmin}
           activePage={activePage}
           setActivePage={setActivePage}
+          onLogout={logout}
         >
           {activePage === "dashboard" && renderDashboard()}
           {activePage === "trace" && <TraceabilityPage contract={contract} />}
-{activePage === "admin" && isAdmin && <AdminPanel contract={contract} account={account} onRoleAssigned={refreshRole} />}
+          {activePage === "admin" && isAdmin && <AdminPanel contract={contract} account={account} onRoleAssigned={refreshRole} />}
         </Layout>
       )}
 
