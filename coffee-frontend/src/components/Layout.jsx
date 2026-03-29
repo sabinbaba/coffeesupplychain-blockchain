@@ -6,11 +6,14 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
   const shortAddress = (addr) =>
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
-    const navItems = [
+  const baseNavItems = [
     { id: "dashboard", label: "Dashboard",      icon: "⊞" },
     { id: "trace",     label: "Traceability",   icon: "🔗" },
-    { id: "admin", label: "Admin Panel", icon: "🔑" },
   ];
+
+  const navItems = isAdmin
+    ? [...baseNavItems, { id: "admin", label: "Admin Panel", icon: "🔑" }]
+    : baseNavItems;
 
   return (
     <div className={`layout ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>

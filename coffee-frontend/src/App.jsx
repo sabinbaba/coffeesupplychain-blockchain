@@ -155,7 +155,7 @@ function App() {
         >
           {activePage === "dashboard" && renderDashboard()}
           {activePage === "trace" && <TraceabilityPage contract={contract} />}
-          {activePage === "admin" && <AdminPanel contract={contract} account={account} onRoleAssigned={refreshRole} />}
+{activePage === "admin" && isAdmin && <AdminPanel contract={contract} account={account} onRoleAssigned={refreshRole} />}
         </Layout>
       )}
 
