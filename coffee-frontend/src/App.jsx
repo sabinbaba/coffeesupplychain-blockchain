@@ -42,7 +42,44 @@ function App() {
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
 
   const renderDashboard = () => {
-    if (isAdmin) {
+    // Admin check happens AFTER role check to prioritize role panels
+    if (role === 0) {
+      return (
+        <div className="onboarding">
+          <div className="onboarding-icon">🌱</div>
+          <h3>Farmer — Ready to Create Batches</h3>
+          <p>Connect as Farmer to start creating coffee batches on-chain.</p>
+          <p>Once assigned Farmer role by admin, you'll see the "Create Batch" form here.</p>
+          <div className="onboarding-steps">
+            <div className="onboarding-step">
+              <span className="step-num">1</span>
+              <div>
+                <strong>Share your wallet address with admin</strong>
+                <p><code>{account}</code></p>
+              </div>
+            </div>
+            <div className="onboarding-step">
+              <span className="step-num">2</span>
+              <div>
+                <strong>Ask admin to assign "Farmer" role</strong>
+                <p>After assignment, refresh page to access batch creation.</p>
+              </div>
+            </div>
+          </div>
+          <button
+            className="btn-copy"
+            onClick={() => {
+              navigator.clipboard.writeText(account);
+              alert("Farmer wallet address copied!");
+            }}
+          >
+            Copy My Farmer Address
+          </button>
+        </div>
+      );
+    }
+    
+    if (isAdmin && role !== 1) {
       return (
         <AdminPanel
           contract={contract}
@@ -61,29 +98,23 @@ function App() {
       default:
         return (
           <div className="onboarding">
-            <div className="onboarding-icon">⚠️</div>
-            <h3>No Role Assigned Yet</h3>
-            <p>Your wallet is connected but you don't have a role in this system.</p>
+            <div className="onboarding-icon">🌱</div>
+            <h3>Farmer — Ready to Create Batches</h3>
+            <p>Connect as Farmer to start creating coffee batches on-chain.</p>
+            <p>Once assigned Farmer role by admin, you'll see the "Create Batch" form here.</p>
             <div className="onboarding-steps">
               <div className="onboarding-step">
                 <span className="step-num">1</span>
                 <div>
-                  <strong>Copy your wallet address</strong>
-                  <p>Your address: <code>{account}</code></p>
+                  <strong>Share your wallet address with admin</strong>
+                  <p><code>{account}</code></p>
                 </div>
               </div>
               <div className="onboarding-step">
                 <span className="step-num">2</span>
                 <div>
-                  <strong>Send it to the admin</strong>
-                  <p>The admin will assign you a role — Farmer, Processor, Inspector, or Consumer.</p>
-                </div>
-              </div>
-              <div className="onboarding-step">
-                <span className="step-num">3</span>
-                <div>
-                  <strong>Refresh this page</strong>
-                  <p>Once assigned, refresh and your dashboard will appear automatically.</p>
+                  <strong>Ask admin to assign "Farmer" role</strong>
+                  <p>After assignment, refresh page to access batch creation.</p>
                 </div>
               </div>
             </div>
@@ -91,10 +122,10 @@ function App() {
               className="btn-copy"
               onClick={() => {
                 navigator.clipboard.writeText(account);
-                alert("Address copied to clipboard!");
+                alert("Farmer wallet address copied!");
               }}
             >
-              Copy My Wallet Address
+              Copy My Farmer Address
             </button>
           </div>
         );
@@ -149,6 +180,7 @@ function App() {
       ) : (
         <Layout
           account={account}
+          role={role}
           roleName={roleName}
           isAdmin={isAdmin}
           activePage={activePage}

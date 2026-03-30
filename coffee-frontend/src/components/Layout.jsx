@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function Layout({ account, roleName, isAdmin, activePage, setActivePage, onLogout, children }) {
+export default function Layout({ account, roleName, isAdmin, role, activePage, setActivePage, onLogout, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const shortAddress = (addr) =>
@@ -64,11 +64,16 @@ export default function Layout({ account, roleName, isAdmin, activePage, setActi
         {/* ── Top header ── */}
         <header className="topbar">
           <div className="topbar-left">
-            <h2 className="topbar-title">
-              {activePage === "dashboard"  && `${roleName} Dashboard`}
-              {activePage === "trace"      && "Batch Journey"}
-              {activePage === "admin"      && "Admin Console"}
-            </h2>
+        <h2 className="topbar-title">
+          {activePage === "dashboard" && role === 1 && "🌱 Farmer Operations — Create Batch"}
+          {activePage === "dashboard" && role === 2 && "⚙️ Processor Dashboard"}
+          {activePage === "dashboard" && role === 3 && "🔍 Inspector Dashboard"}
+          {activePage === "dashboard" && role === 4 && "🛒 Consumer Dashboard"}
+          {activePage === "dashboard" && role === 0 && "Get Farmer Role"}
+          {activePage === "dashboard" && isAdmin && "🔑 Admin Console"}
+          {activePage === "trace"      && "⛓️ Batch Traceability"}
+          {activePage === "admin"      && !isAdmin && "Operations"}
+        </h2>
           </div>
           <div className="topbar-right">
             {account && (
